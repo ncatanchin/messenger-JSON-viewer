@@ -5,14 +5,6 @@ export type Chat = {
   title: string;
 };
 
-export enum MessageType {
-  Generic = 'Generic',
-  Unsubscribe = 'Unsubscribe',
-  Subscribe = 'Subscribe',
-  Call = 'Call',
-  Share = 'Share',
-}
-
 export type Message = {
   users: {
     name: string;
