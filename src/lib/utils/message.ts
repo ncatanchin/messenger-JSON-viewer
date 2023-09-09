@@ -53,7 +53,7 @@ export async function loadChats(
         const name = decodeString(messageData.participants[0].name);
 
         const lastSent = messageData.messages.sort(
-          (a, b) => a.timestamp_ms - b.timestamp_ms
+          (a, b) => b.timestamp_ms - a.timestamp_ms
         )[0].timestamp_ms;
 
         return {
