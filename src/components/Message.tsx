@@ -174,7 +174,7 @@ export default function MessageComponent({
           {imageURIs
             ? imageURIs.map((uri) => (
                 <a href={uri} key={uri}>
-                  <img src={uri} alt={uri} />
+                  <img src={uri} alt={uri} className='max-h-48' />
                 </a>
               ))
             : content}
