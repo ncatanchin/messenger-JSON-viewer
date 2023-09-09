@@ -9,7 +9,7 @@ import { getFileHandleRecursively } from '@/lib/utils/file';
 import { decodeString, useGroupedActorsByReaction } from '@/lib/utils/message';
 
 import FsImage from './FsImage';
-import { Message, MessageType } from '../types';
+import { Message } from '../types';
 
 function ReactionButton({
   reaction,
@@ -128,12 +128,9 @@ export default function MessageComponent({
 }) {
   const content = decodeString(message.content || '');
   const { data: imageURIs } = useSWR(
-    () =>
-      message.type === MessageType.Generic && message.photos
-        ? `/message/photo/${message.timestamp_ms}`
-        : null,
+    () => (message.photos ? `/message/photo/${message.timestamp_ms}` : null),
     async () => {
-      if (!(message.type === MessageType.Generic && message.photos)) {
+      if (!message.photos) {
         return [];
       }
 
@@ -165,87 +162,59 @@ export default function MessageComponent({
     </BaseMessage>
   );
 
-  const renderNotImplemented = () => (
-    <BaseMessage
-      isFirst={isFirst}
-      isLast={isLast}
-      isMe={isMe}
-      className='bg-red-500 text-white dark:bg-red-700'
-      message={message}
-    >
-      Not implemented
-      <pre className='mt-3 whitespace-pre-wrap text-xs'>
-        <code>{JSON.stringify(message)}</code>
-      </pre>
-    </BaseMessage>
-  );
-
-  switch (message.type) {
-    case MessageType.Generic: {
-      if (message.photos) {
-        return (
-          <SRLWrapper>
-            <BaseMessage
-              isFirst={isFirst}
-              isLast={isLast}
-              isMe={isMe}
-              message={message}
-            >
-              {imageURIs
-                ? imageURIs.map((uri) => (
-                    <a href={uri} key={uri}>
-                      <img src={uri} alt={uri} />
-                    </a>
-                  ))
-                : content}
-            </BaseMessage>
-          </SRLWrapper>
-        );
-      } else if (message.content) {
-        return renderDefault();
-      } else if (message.sticker) {
-        return (
-          <BaseMessage
-            isFirst={isFirst}
-            isLast={isLast}
-            isMe={isMe}
-            message={message}
-            transparentBG
-          >
-            <FsImage
-              root={rootDir}
-              path={message.sticker.uri.replace(/^messages\//, '')}
-            />
-          </BaseMessage>
-        );
-      } else {
-        return renderDefault();
-      }
-    }
-    case MessageType.Share: {
-      if (message.share?.link) {
-        return (
-          <BaseMessage
-            isFirst={isFirst}
-            isLast={isLast}
-            isMe={isMe}
-            message={message}
-          >
-            <a
-              href={message.share.link}
-              target='_blank'
-              rel='noreferrer'
-              className='underline'
-            >
-              {content}
-            </a>
-          </BaseMessage>
-        );
-      } else {
-        return renderDefault();
-      }
-    }
-    default:
-      return renderNotImplemented();
+  if (message.photos) {
+    return (
+      <SRLWrapper>
+        <BaseMessage
+          isFirst={isFirst}
+          isLast={isLast}
+          isMe={isMe}
+          message={message}
+        >
+          {imageURIs
+            ? imageURIs.map((uri) => (
+                <a href={uri} key={uri}>
+                  <img src={uri} alt={uri} />
+                </a>
+              ))
+            : content}
+        </BaseMessage>
+      </SRLWrapper>
+    );
+  } else if (message.sticker) {
+    return (
+      <BaseMessage
+        isFirst={isFirst}
+        isLast={isLast}
+        isMe={isMe}
+        message={message}
+        transparentBG
+      >
+        <FsImage
+          root={rootDir}
+          path={message.sticker.uri.replace(/^messages\//, '')}
+        />
+      </BaseMessage>
+    );
+  } else if (message.share?.link) {
+    return (
+      <BaseMessage
+        isFirst={isFirst}
+        isLast={isLast}
+        isMe={isMe}
+        message={message}
+      >
+        <a
+          href={message.share.link}
+          target='_blank'
+          rel='noreferrer'
+          className='underline'
+        >
+          {content}
+        </a>
+      </BaseMessage>
+    );
+  } else {
+    return renderDefault();
   }
 }
