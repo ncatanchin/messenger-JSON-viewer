@@ -193,6 +193,7 @@ export default function MessageComponent({
         <FsImage
           root={rootDir}
           path={message.sticker.uri.replace(/^messages\//, '')}
+          className='max-h-24'
         />
       </BaseMessage>
     );
