@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { getSubDirs, readAutofillInformation, readMessageJSON } from './file';
+import { getSubDirs, readAutofillInformation, readMessagesJSON } from './file';
 
 import { Chat, Message, MessageData } from '@/types';
 
@@ -38,14 +38,21 @@ export async function loadChats(
   const subDirs = await getSubDirs(inboxDir);
   return Promise.all(
     subDirs.map(async (dir) => {
-      const messageJSON = await readMessageJSON(dir);
-      if (messageJSON) {
-        chatCache.set(dir.name, messageJSON);
+      const messagesJSON = await readMessagesJSON(dir);
+      if (messagesJSON) {
+        const messageDataParts: MessageData[] = messagesJSON.map(
+          (messagesPart) => JSON.parse(messagesPart) as MessageData
+        );
+        const messageData: MessageData = {
+          ...messageDataParts[0],
+          messages: messageDataParts.flatMap((data) => data.messages),
+        };
 
-        const message: MessageData = JSON.parse(messageJSON);
-        const name = decodeString(message.participants[0].name);
+        chatCache.set(dir.name, JSON.stringify(messageData));
 
-        const lastSent = message.messages.sort(
+        const name = decodeString(messageData.participants[0].name);
+
+        const lastSent = messageData.messages.sort(
           (a, b) => a.timestamp_ms - b.timestamp_ms
         )[0].timestamp_ms;
 
@@ -53,7 +60,7 @@ export async function loadChats(
           name,
           dirName: dir.name,
           lastSent,
-          title: decodeString(message.title),
+          title: decodeString(messageData.title),
         } as Chat;
       } else {
         return null;
@@ -77,13 +84,13 @@ export function useCurrentMessage(folderName: string | null) {
 }
 
 // Group message by consecutive sender name
-export function useGroupedMessages(currentMessage: MessageData | null) {
+export function useGroupedMessages(currentMessageData: MessageData | null) {
   return useMemo<Message[][]>(() => {
-    if (!currentMessage) {
+    if (!currentMessageData) {
       return [];
     }
 
-    const messages = currentMessage.messages.sort(
+    const messages = currentMessageData.messages.sort(
       (a, b) => a.timestamp_ms - b.timestamp_ms
     );
 
@@ -105,7 +112,7 @@ export function useGroupedMessages(currentMessage: MessageData | null) {
     groupedMessages.push(currentGroup);
 
     return groupedMessages;
-  }, [currentMessage]);
+  }, [currentMessageData]);
 }
 
 function countMessageBySenderName(messages: Message[]) {
@@ -116,14 +123,14 @@ function countMessageBySenderName(messages: Message[]) {
   return count;
 }
 
-export function useChatStatistics(currentMessage: MessageData | null) {
+export function useChatStatistics(currentMessageData: MessageData | null) {
   return useMemo(() => {
-    if (!currentMessage) {
+    if (!currentMessageData) {
       return null;
     }
 
-    const countInfo = countMessageBySenderName(currentMessage.messages);
-    const createdAt = currentMessage.messages.sort(
+    const countInfo = countMessageBySenderName(currentMessageData.messages);
+    const createdAt = currentMessageData.messages.sort(
       (a, b) => a.timestamp_ms - b.timestamp_ms
     )[0].timestamp_ms;
 
@@ -131,7 +138,7 @@ export function useChatStatistics(currentMessage: MessageData | null) {
       countInfo,
       createdAt,
     };
-  }, [currentMessage]);
+  }, [currentMessageData]);
 }
 
 export function groupActorsByReaction(
