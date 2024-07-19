@@ -23,11 +23,17 @@ export async function getSubDirs(dir: FileSystemDirectoryHandle) {
   return entries;
 }
 
-export async function readMessageJSON(dir: FileSystemDirectoryHandle) {
+export async function readMessagesJSON(dir: FileSystemDirectoryHandle) {
   try {
-    const file = await dir.getFileHandle('message_1.json');
-
-    return (await file.getFile()).text();
+    const parts: string[] = [];
+    for await (const handle of dir.values()) {
+      if (handle.kind === 'file' && handle.name.includes('message')) {
+        const file = await handle.getFile();
+        const text = await file.text();
+        parts.push(text);
+      }
+    }
+    return parts;
   } catch (e) {
     return null;
   }

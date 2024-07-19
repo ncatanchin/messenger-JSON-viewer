@@ -5,42 +5,21 @@ export type Chat = {
   title: string;
 };
 
-export enum MessageType {
-  Generic = 'Generic',
-  Unsubscribe = 'Unsubscribe',
-  Subscribe = 'Subscribe',
-  Call = 'Call',
-  Share = 'Share',
-}
-
-export type Message = (
-  | {
-      type: MessageType.Unsubscribe | MessageType.Unsubscribe;
-      users: {
-        name: string;
-      }[];
-    }
-  | {
-      type: MessageType.Call;
-      call_duration: number;
-    }
-  | {
-      type: MessageType.Share;
-      share?: {
-        link: string;
-      };
-    }
-  | {
-      type: MessageType.Generic;
-      photos?: {
-        uri: string;
-        creation_timestamp: number;
-      }[];
-      sticker?: {
-        uri: string;
-      };
-    }
-) & {
+export type Message = {
+  users: {
+    name: string;
+  }[];
+  call_duration: number;
+  share?: {
+    link: string;
+  };
+  photos?: {
+    uri: string;
+    creation_timestamp: number;
+  }[];
+  sticker?: {
+    uri: string;
+  };
   sender_name: string;
   timestamp_ms: number;
   content?: string;
